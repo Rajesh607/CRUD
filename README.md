@@ -1,111 +1,51 @@
-# Business Intelligence Platform (Full Stack)
+# BI Platform (Single Folder, FastAPI + Jinja + PostgreSQL)
 
-Production-style BI web application with secure auth, ingestion, pattern-driven normalization, AI abstraction, and relationship analysis.
+This revision consolidates backend and frontend into one deployable app folder (`bi_app/`) with **FastAPI APIs + Jinja frontend templates**.
 
-## 1) Project Structure
+## Folder structure
 
 ```text
 .
-├── backend/
+├── bi_app/
 │   ├── app/
-│   │   ├── api/
-│   │   │   ├── deps.py
-│   │   │   ├── router.py
-│   │   │   └── routes/
-│   │   │       ├── auth.py
-│   │   │       ├── data.py
-│   │   │       └── analysis.py
-│   │   ├── core/
-│   │   │   ├── config.py
-│   │   │   └── security.py
-│   │   ├── db/
-│   │   │   ├── base.py
-│   │   │   ├── init_db.py
-│   │   │   └── session.py
-│   │   ├── engines/pattern_engine.py
-│   │   ├── models/models.py
-│   │   ├── schemas/
-│   │   │   ├── auth.py
-│   │   │   └── company.py
-│   │   ├── services/ai_service.py
-│   │   ├── utils/file_parser.py
+│   │   ├── core/                # settings + security helpers
+│   │   ├── db/                  # engine/session/base
+│   │   ├── routers/             # auth, data, analysis, pages
+│   │   ├── services/            # file extraction, pattern engine, AI layer
+│   │   ├── static/              # CSS/JS assets for Jinja frontend
+│   │   ├── templates/           # Jinja UI pages
+│   │   ├── deps.py
+│   │   ├── models.py
+│   │   ├── schemas.py
 │   │   └── main.py
-│   ├── alembic/
 │   ├── tests/
 │   ├── Dockerfile
 │   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── api/client.ts
-│   │   ├── components/
-│   │   ├── contexts/AuthContext.tsx
-│   │   ├── pages/
-│   │   ├── types/index.ts
-│   │   ├── App.tsx
-│   │   └── main.tsx
-│   ├── Dockerfile
-│   └── package.json
 ├── docker-compose.yml
 └── README.md
 ```
 
-## 2) Architecture Overview
+## Why this change
+- Use **Jinja** as requested for the frontend layer.
+- Keep frontend + backend in a **single folder** for simpler deployment and ownership.
+- Keep API contracts required by the original BI workflow.
 
-### Backend (FastAPI + SQLAlchemy + PostgreSQL)
-- **Auth module**: JWT signup/login/me endpoints with bcrypt hashing.
-- **Data ingestion module**: supports DOC/DOCX/PDF/Excel/JSON/text input; validates size and format.
-- **Parsing/extraction**: detects file types and extracts text/metadata.
-- **Pattern engine**:
-  - Generates signature from content.
-  - If known signature exists, applies rule-based normalization.
-  - If unknown, calls AI service normalization and stores new pattern/rule.
-- **AI service layer**:
-  - `normalize_unknown_pattern()`
-  - `summarize_company()`
-  - `analyze_relationship()`
-  - Runs in mock mode if API key absent.
-- **Relationship engine**: score-based insights + natural-language summary.
+## Run with Docker
 
-### Frontend (React + TypeScript + Vite + Tailwind)
-- Auth pages (signup/login).
-- Protected dashboard + upload flows for Company A and Target.
-- Summary, relationship analysis, combined results, and history pages.
-- Axios client with JWT interceptor.
-
-## 3) Setup Instructions
-
-### Docker (recommended)
 ```bash
 docker-compose up --build
 ```
 
-Services:
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:8000`
-- Swagger docs: `http://localhost:8000/docs`
-- PostgreSQL: `localhost:5432`
+- App: http://localhost:8000
+- Health: http://localhost:8000/health
+- API docs: http://localhost:8000/docs
 
-### Local backend
-```bash
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-### Local frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-## 4) API Endpoints
+## Core API endpoints
 
 ### Auth
 - `POST /api/v1/auth/signup`
 - `POST /api/v1/auth/login`
-- `GET /api/v1/auth/me`
+- `GET /api/v1/me`
 
 ### Data
 - `POST /api/v1/upload`
@@ -117,48 +57,18 @@ npm run dev
 - `POST /api/v1/analyze`
 - `GET /api/v1/relationship/{id}`
 
-## 5) Sample API Calls
+## Business flow
+1. Sign up / Login from Jinja page (`/`)
+2. Upload Company A and Target Company (`/app`)
+3. Parsing + extraction + metadata storage
+4. Pattern signature check
+   - Known: rule normalization
+   - Unknown/conflict: AI normalization + persist new pattern/rule
+5. Save normalized companies + summaries
+6. Run relationship analysis
+7. View output in dashboard panel / history endpoint
 
-### Signup
-```bash
-curl -X POST http://localhost:8000/api/v1/auth/signup \
-  -H "Content-Type: application/json" \
-  -d '{"email":"analyst@demo.com","password":"secret123","role":"analyst"}'
-```
-
-### Login
-```bash
-curl -X POST http://localhost:8000/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"analyst@demo.com","password":"secret123"}'
-```
-
-### Upload Company A (copy-paste)
-```bash
-curl -X POST http://localhost:8000/api/v1/upload \
-  -H "Authorization: Bearer <TOKEN>" \
-  -F "company_type=company_a" \
-  -F "input_text=Company Name: Acme Corp\nIndustry: SaaS\nCountry: US"
-```
-
-### Analyze relationship
-```bash
-curl -X POST http://localhost:8000/api/v1/analyze \
-  -H "Authorization: Bearer <TOKEN>" \
-  -H "Content-Type: application/json" \
-  -d '{"company_a_id":1,"target_company_id":2}'
-```
-
-## 6) Security + Non-Functional Coverage
-- JWT protected routes for upload/data/analysis.
-- Password hashing with bcrypt.
-- File size/type validation.
-- Input schema validation via Pydantic.
-- Modular clean architecture.
-- Mockable AI abstraction for portability.
-
-## 7) Basic Tests
-Run backend tests:
-```bash
-cd backend && pytest
-```
+## Notes
+- AI service is pluggable; mock mode is used without provider key.
+- Upload supports DOC/DOCX/PDF/Excel/JSON/TXT + copy-paste text.
+- Max upload size is 25MB.

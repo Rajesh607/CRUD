@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BI Platform - Login</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<div class="container">
+  <h1>Business Intelligence Platform</h1>
+  <div class="grid">
+    <section>
+      <h2>Signup</h2>
+      <form id="signupForm">
+        <input name="email" placeholder="Email" required />
+        <input name="password" type="password" placeholder="Password" minlength="8" required />
+        <select name="role"><option value="analyst">Analyst</option><option value="admin">Admin</option></select>
+        <button>Create account</button>
+      </form>
+    </section>
+    <section>
+      <h2>Login</h2>
+      <form id="loginForm">
+        <input name="email" placeholder="Email" required />
+        <input name="password" type="password" placeholder="Password" required />
+        <button>Login</button>
+      </form>
+    </section>
+  </div>
+  <pre id="status"></pre>
+</div>
+<script>
+const statusEl = document.getElementById('status');
+document.getElementById('signupForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const body = Object.fromEntries(f.entries());
+  const r = await fetch('/api/v1/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  statusEl.textContent = await r.text();
+};
+document.getElementById('loginForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const body = Object.fromEntries(f.entries());
+  const r = await fetch('/api/v1/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data = await r.json();
+  if (data.access_token) { localStorage.setItem('token', data.access_token); window.location='/app'; }
+  else statusEl.textContent = JSON.stringify(data,null,2);
+};
+</script>
+</body>
+</html>

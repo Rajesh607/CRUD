@@ -9,28 +9,19 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
 
-  backend:
-    build: ./backend
+  bi_app:
+    build: ./bi_app
     environment:
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/bi_app
       SECRET_KEY: super-secret-jwt-key
-      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
-    volumes:
-      - ./backend:/app
-      - ./backend/uploads:/app/uploads
     ports:
       - "8000:8000"
     depends_on:
       - db
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "5173:80"
-    depends_on:
-      - backend
+    volumes:
+      - ./bi_app:/app
 
 volumes:
-  postgres_data:
+  pgdata:
