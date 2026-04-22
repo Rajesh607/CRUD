@@ -1,0 +1,27 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: bi_app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  bi_app:
+    build: ./bi_app
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/bi_app
+      SECRET_KEY: super-secret-jwt-key
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    volumes:
+      - ./bi_app:/app
+
+volumes:
+  pgdata:

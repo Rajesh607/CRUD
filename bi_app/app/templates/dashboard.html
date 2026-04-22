@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BI Platform Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<div class="container">
+  <h1>BI Dashboard (Jinja Frontend)</h1>
+  <nav>
+    <button onclick="show('uploadA')">Upload Company A</button>
+    <button onclick="show('uploadB')">Upload Target</button>
+    <button onclick="loadHistory()">History</button>
+  </nav>
+
+  <section id="uploadA" class="card">
+    <h3>Upload Company A</h3>
+    <form onsubmit="submitUpload(event,'company_a')">
+      <input type="file" name="file" />
+      <textarea name="input_text" placeholder="Or paste text"></textarea>
+      <button>Process</button>
+    </form>
+  </section>
+
+  <section id="uploadB" class="card">
+    <h3>Upload Target Company</h3>
+    <form onsubmit="submitUpload(event,'target_company')">
+      <input type="file" name="file" />
+      <textarea name="input_text" placeholder="Or paste text"></textarea>
+      <button>Process</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h3>Relationship Analysis</h3>
+    <form id="analyzeForm">
+      <input name="company_a_id" placeholder="Company A ID" required />
+      <input name="target_company_id" placeholder="Target Company ID" required />
+      <button>Analyze</button>
+    </form>
+  </section>
+
+  <pre id="output"></pre>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
